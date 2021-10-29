@@ -1,6 +1,6 @@
-#Pending
+# Pending
 
-##Notes
+## Notes
 * You can export the environment variables for the Username and Access Key of your BrowserStack account
 * You can export the environment variable for your Percy Project token
 
