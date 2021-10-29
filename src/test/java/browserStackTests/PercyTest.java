@@ -1,10 +1,9 @@
 package browserStackTests;
 
-import java.net.MalformedURLException;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.Set;
-
+import io.percy.selenium.Percy;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
@@ -17,7 +16,12 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import io.percy.selenium.Percy;
+import java.io.FileReader;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.util.Iterator;
+import java.util.Map;
+import java.net.URL;
 
 public class PercyTest {
 
@@ -27,30 +31,35 @@ public class PercyTest {
 	WebDriverWait wait;
 
 	@BeforeTest
-	public void setup() {
-		Hashtable<String, String> capsHashtable = new Hashtable<String, String>();
-		capsHashtable.put("browser", "chrome");
-		capsHashtable.put("browser_version", "latest");
-		capsHashtable.put("os", "Windows");
-		capsHashtable.put("os_version", "10");
-		capsHashtable.put("build", "percy-test-1");
-		capsHashtable.put("name", "Percy Test");
-		capsHashtable.put("browserstack.selenium_version","3.141.59");
+	@org.testng.annotations.Parameters(value = {"config"})
+	public void setup(String config_file) throws IOException, ParseException {
+		JSONParser parser = new JSONParser();
+		JSONObject config = (JSONObject) parser.parse(new FileReader("src/test/resources/conf/" + config_file));
 
-		String key;
-		DesiredCapabilities caps = new DesiredCapabilities();
+		DesiredCapabilities capabilities = new DesiredCapabilities();
 
-		Set<String> keys = capsHashtable.keySet();
-		Iterator<String> itr = keys.iterator();
-		while (itr.hasNext()) {
-			key = itr.next();
-			caps.setCapability(key, capsHashtable.get(key));
+		Map<String, String> commonCapabilities = (Map<String, String>) config.get("capabilities");
+		Iterator it = commonCapabilities.entrySet().iterator();
+		while (it.hasNext()) {
+			Map.Entry pair = (Map.Entry) it.next();
+			if (capabilities.getCapability(pair.getKey().toString()) == null) {
+				capabilities.setCapability(pair.getKey().toString(), pair.getValue().toString());
+			}
 		}
 
-		
+		String username = System.getenv("BROWSERSTACK_USERNAME");
+		if (username == null) {
+			username = (String) config.get("user");
+		}
+
+		String accessKey = System.getenv("BROWSERSTACK_ACCESS_KEY");
+		if (accessKey == null) {
+			accessKey = (String) config.get("key");
+		}
+
 		try {
-			String URL = "https://" + System.getenv("BROWSERSTACK_USERNAME") + ":" + System.getenv("BROWSERSTACK_ACCESS_KEY") + "@hub-cloud.browserstack.com/wd/hub";
-			driver = new RemoteWebDriver(new java.net.URL(URL), caps);
+			String URL = "https://" + username + ":" + accessKey + "@hub-cloud.browserstack.com/wd/hub";
+			driver = new RemoteWebDriver(new URL(URL), capabilities);
 			percy = new Percy(driver);
 			jse = (JavascriptExecutor) driver;
 			wait = new WebDriverWait(driver, 10);
