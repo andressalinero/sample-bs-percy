@@ -1,0 +1,16 @@
+version: 2
+snapshot:
+  widths:
+    - 375
+    - 1280
+  minHeight: 1024
+  percyCSS: ".checkout__form-container.opened .checkout__section-container { animation : digi-slide-down-fade-in 0s forwards !important; }"
+discovery:
+  allowedHostnames: []
+  networkIdleTimeout: 100
+static:
+  cleanUrls: false
+upload:
+  files: "**/*.{png,jpg,jpeg}"
+  ignore: ""
+  stripExtensions: false
